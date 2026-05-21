@@ -60,7 +60,7 @@ coverage.xml
 # 🔹 Environment variables
 
 .env
-.env.*
+.env.example
 
 # 🔹 PyCharm / IDE
 
