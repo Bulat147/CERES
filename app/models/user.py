@@ -1,15 +1,14 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime
-from sqlalchemy.dialects.postgresql import UUID
 
-from app.db.database import Base
+from app.db.database import Base, GUID
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID, primary_key=True, default=uuid.uuid4)
     phone = Column(String(20), nullable=False, unique=True, index=True)
     email = Column(String(255), nullable=True, unique=True, index=True)
     full_name = Column(String(255), nullable=False)

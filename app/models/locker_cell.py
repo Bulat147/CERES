@@ -1,17 +1,16 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime, DECIMAL, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.db.database import Base
+from app.db.database import Base, GUID
 
 
 class LockerCell(Base):
     __tablename__ = "locker_cells"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    station_id = Column(UUID(as_uuid=True), ForeignKey("locker_stations.id"), nullable=False)
+    id = Column(GUID, primary_key=True, default=uuid.uuid4)
+    station_id = Column(GUID, ForeignKey("locker_stations.id"), nullable=False)
     number = Column(Integer, nullable=False)  # номер ячейки в постомате
     size = Column(String(20), nullable=False)  # SMALL, MEDIUM, LARGE
     hourly_price = Column(DECIMAL(10, 2), nullable=False)

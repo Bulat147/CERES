@@ -1,18 +1,17 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime, DECIMAL, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.db.database import Base
+from app.db.database import Base, GUID
 
 
 class Payment(Base):
     __tablename__ = "payments"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    rental_id = Column(UUID(as_uuid=True), ForeignKey("rentals.id"), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id = Column(GUID, primary_key=True, default=uuid.uuid4)
+    rental_id = Column(GUID, ForeignKey("rentals.id"), nullable=False)
+    user_id = Column(GUID, ForeignKey("users.id"), nullable=False)
     amount = Column(DECIMAL(10, 2), nullable=False)
     currency = Column(String(3), nullable=False, default="RUB")
     status = Column(String(20), nullable=False, default="PENDING")  # PENDING, PAID, FAILED, DEBT

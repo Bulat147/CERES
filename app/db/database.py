@@ -1,10 +1,27 @@
+import uuid
 from typing import Any, AsyncGenerator
 
+from sqlalchemy import String, TypeDecorator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import StaticPool
 
 from app.config import settings
+
+
+class GUID(TypeDecorator):
+    impl = String(36)
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        return uuid.UUID(value)
 
 # Определяем движок базы данных в зависимости от типа
 if settings.DATABASE_URL.startswith("sqlite"):

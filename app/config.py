@@ -2,7 +2,7 @@ import os
 from typing import Optional, List
 
 from pydantic_settings import BaseSettings
-from pydantic import PostgresDsn, validator, AnyHttpUrl
+from pydantic import PostgresDsn, field_validator, ValidationInfo
 
 
 class Settings(BaseSettings):
@@ -23,25 +23,26 @@ class Settings(BaseSettings):
 
     DATABASE_URL: Optional[str] = None
 
-    @validator("DATABASE_URL", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: dict) -> str:
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> str:
         if isinstance(v, str):
             return v
 
-        database_type = values.get("DATABASE_TYPE", "sqlite")
+        data = info.data
+        database_type = data.get("DATABASE_TYPE", "sqlite")
 
         if database_type == "postgresql":
             return str(PostgresDsn.build(
                 scheme="postgresql+asyncpg",
-                username=values.get("POSTGRES_USER"),
-                password=values.get("POSTGRES_PASSWORD"),
-                host=values.get("POSTGRES_SERVER"),
-                port=values.get("POSTGRES_PORT"),
-                path=f"{values.get('POSTGRES_DB') or ''}",
+                username=data.get("POSTGRES_USER"),
+                password=data.get("POSTGRES_PASSWORD"),
+                host=data.get("POSTGRES_SERVER"),
+                port=data.get("POSTGRES_PORT"),
+                path=f"{data.get('POSTGRES_DB') or ''}",
             ))
         else:
-            # SQLite для локальной разработки
-            return values.get("SQLITE_DB_PATH", "sqlite+aiosqlite:///./ceres.db")
+            return data.get("SQLITE_DB_PATH", "sqlite+aiosqlite:///./ceres.db")
 
     # JWT настройки (если понадобится для аутентификации)
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
@@ -51,19 +52,19 @@ class Settings(BaseSettings):
     # Настройки логирования
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     JSON_LOGS: bool = os.getenv("JSON_LOGS", "false").lower() == "true"
-    
-    # CORS настройки
-    CORS_ORIGINS: List[AnyHttpUrl] = [
+
+    CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:8080",
     ]
-
-    @validator("CORS_ORIGINS", pre=True)
-    def parse_cors_origins(cls, v: str) -> list:
+    
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
         """Парсинг строки CORS_ORIGINS в список."""
-        if not v:
-            return []
-        return [origin.strip() for origin in v.split(",")]
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
 
     # Настройки платежей
     YOOKASSA_SHOP_ID: Optional[str] = os.getenv("YOOKASSA_SHOP_ID")

@@ -1,16 +1,15 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime, DECIMAL
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from app.db.database import Base
+from app.db.database import Base, GUID
 
 
 class LockerStation(Base):
     __tablename__ = "locker_stations"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID, primary_key=True, default=uuid.uuid4)
     title = Column(String(255), nullable=False)
     address = Column(String(500), nullable=False)
     latitude = Column(DECIMAL(10, 8), nullable=False)

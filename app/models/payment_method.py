@@ -1,17 +1,16 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.db.database import Base
+from app.db.database import Base, GUID
 
 
 class PaymentMethod(Base):
     __tablename__ = "payment_methods"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id = Column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID, ForeignKey("users.id"), nullable=False)
     provider = Column(String(50), nullable=False)  # YooKassa, Sberbank, etc.
     masked_pan = Column(String(20), nullable=False)  # маскированный номер карты
     token = Column(String(255), nullable=True)  # токен для повторного использования
