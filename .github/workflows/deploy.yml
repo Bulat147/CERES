@@ -2,8 +2,6 @@ name: Deploy backend
 
 on:
   pull_request:
-    branches:
-      - master
   push:
     branches:
       - master
