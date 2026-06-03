@@ -36,7 +36,7 @@ jobs:
         with:
           host: 85.209.9.46
           username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          password: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /docker_postgress_main
             docker compose -f docker-compose.prod.yaml pull backend
