@@ -38,6 +38,7 @@ jobs:
           username: root
           password: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /docker_postgress_main
+            cd ./docker_postgress_main
             docker compose -f docker-compose.yaml pull backend
             docker compose -f docker-compose.yaml up -d backend
+            
