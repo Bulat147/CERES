@@ -1,14 +1,12 @@
 name: Deploy backend
 
 on:
-  pull_request:
   push:
     branches:
       - master
 
 jobs:
   build:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
@@ -28,8 +26,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+
+
   deploy:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -60,6 +59,6 @@ jobs:
           username: root
           password: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /docker_postgress_main
+            cd ./docker_postgress_main
             docker compose -f docker-compose.yaml pull backend
             docker compose -f docker-compose.yaml up -d backend
