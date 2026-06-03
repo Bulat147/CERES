@@ -59,3 +59,12 @@ app.include_router(payment_methods.router, prefix="/api/v1/payment-methods", tag
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 app.include_router(cell_events.router, prefix="/api/v1/cell-events", tags=["cell-events"])
 app.include_router(hardware_events.router, prefix="/api/v1/hardware-events", tags=["hardware-events"])
+
+if settings.ENABLE_METRICS:
+    from prometheus_fastapi_instrumentator import Instrumentator
+
+    Instrumentator(
+        should_group_status_codes=True,
+        should_ignore_untemplated=True,
+        excluded_handlers=["/metrics"],
+    ).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)

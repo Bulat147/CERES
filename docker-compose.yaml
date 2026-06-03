@@ -1,18 +1,31 @@
-version: "3.9"
-
 services:
   db:
-    image: postgres:16
-    container_name: postgres_db
-    restart: always
-    environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
-      POSTGRES_DB: ceres_db
+    image: postgres:16-alpine
+    container_name: ceres-postgres
+    restart: unless-stopped
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: P@ssw0rd
+      POSTGRES_DB: main
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
+    shm_size: 128mb
 
-volumes:
-  postgres_data:
+  app:
+    build: .
+    container_name: ceres-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_TYPE: postgresql
+      POSTGRES_SERVER: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: P@ssw0rd
+      POSTGRES_DB: main
+      POSTGRES_PORT: 5432
+      RUN_DB_MIGRATIONS: "true"
