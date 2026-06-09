@@ -5,7 +5,7 @@ from logging.config import fileConfig
 from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
 
@@ -26,6 +26,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.config import settings
 from app.db.database import Base
 from app.models.user import User
 from app.models.locker_station import LockerStation
@@ -37,6 +38,9 @@ from app.models.cell_event import CellEvent
 from app.models.hardware_event import HardwareEvent
 
 target_metadata = Base.metadata
+
+# URL из settings (не через config.set_main_option: % в пароле ломает ConfigParser)
+database_url = settings.DATABASE_URL
 
 
 def run_migrations_offline() -> None:
@@ -51,7 +55,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = database_url
 
     # Для SQLite отключаем транзакции для DDL
     if url and "sqlite" in url:
@@ -87,11 +91,7 @@ async def run_async_migrations() -> None:
 
     """
 
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_async_engine(database_url, poolclass=pool.NullPool)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

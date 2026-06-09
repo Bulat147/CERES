@@ -9,6 +9,7 @@ from app.config import settings
 from app.logger import setup_logging
 from app.middlewares import setup_middlewares
 from app.db.database import init_db
+from app.metrics import start_business_metrics_refresh, stop_business_metrics_refresh
 
 
 @asynccontextmanager
@@ -22,11 +23,12 @@ async def lifespan(app: FastAPI):
     # Инициализация базы данных (создание таблиц, если не используются миграции)
     # В продакшене используйте Alembic миграции
     # await init_db()
-    
+
+    metrics_task = start_business_metrics_refresh()
+
     yield
-    
-    # Действия при завершении работы
-    # (закрытие соединений и т.д.)
+
+    await stop_business_metrics_refresh(metrics_task)
 
 
 app: FastAPI = FastAPI(
@@ -59,3 +61,12 @@ app.include_router(payment_methods.router, prefix="/api/v1/payment-methods", tag
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 app.include_router(cell_events.router, prefix="/api/v1/cell-events", tags=["cell-events"])
 app.include_router(hardware_events.router, prefix="/api/v1/hardware-events", tags=["hardware-events"])
+
+if settings.ENABLE_METRICS:
+    from prometheus_fastapi_instrumentator import Instrumentator
+
+    Instrumentator(
+        should_group_status_codes=True,
+        should_ignore_untemplated=True,
+        excluded_handlers=["/metrics"],
+    ).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)

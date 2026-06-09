@@ -12,6 +12,7 @@ from app.models.rental import Rental
 from app.models.user import User
 from app.models.locker_cell import LockerCell
 from app.schemas.rental import RentalCreate, RentalUpdate, RentalResponse
+from app.metrics import RENTALS_CREATED, RENTALS_STARTED
 
 router = APIRouter()
 
@@ -77,6 +78,7 @@ async def create_rental(
     # Обновляем статус ячейки на RESERVED
     cell.status = "RESERVED"
     await db.commit()
+    RENTALS_CREATED.inc()
     return rental
 
 
@@ -170,6 +172,7 @@ async def start_rental(
     cell.status = "ACTIVE"
     await db.commit()
     await db.refresh(rental)
+    RENTALS_STARTED.inc()
     return rental
 
 

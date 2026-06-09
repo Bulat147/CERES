@@ -12,14 +12,20 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = True
 
-    # Настройки базы данных
-    DATABASE_TYPE: str = os.getenv("DATABASE_TYPE", "sqlite")  # sqlite или postgresql
-    POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "localhost")
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "app")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "app")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "ceres_db")
-    POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
-    SQLITE_DB_PATH: str = os.getenv("SQLITE_DB_PATH", "sqlite:///./ceres.db")
+    # Настройки базы данных (postgresql по умолчанию; sqlite — для локальных экспериментов)
+    DATABASE_TYPE: str = "postgresql"
+    POSTGRES_SERVER: str = "85.209.9.46"
+    POSTGRES_USER: str = "user"
+    POSTGRES_PASSWORD: str = "app"
+    POSTGRES_DB: str = "main"
+    POSTGRES_PORT: int = 5432
+    SQLITE_DB_PATH: str = "sqlite+aiosqlite:///./ceres.db"
+
+    # true — при старте контейнера выполняется alembic upgrade head (создание/обновление таблиц)
+    RUN_DB_MIGRATIONS: bool = os.getenv("RUN_DB_MIGRATIONS", "true").lower() in ("1", "true", "yes")
+
+    # Prometheus-метрики на /metrics
+    ENABLE_METRICS: bool = os.getenv("ENABLE_METRICS", "true").lower() in ("1", "true", "yes")
 
     DATABASE_URL: Optional[str] = None
 
@@ -70,9 +76,11 @@ class Settings(BaseSettings):
     YOOKASSA_SHOP_ID: Optional[str] = os.getenv("YOOKASSA_SHOP_ID")
     YOOKASSA_SECRET_KEY: Optional[str] = os.getenv("YOOKASSA_SECRET_KEY")
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+        "extra": "ignore",
+    }
 
 
 settings = Settings()
