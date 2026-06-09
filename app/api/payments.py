@@ -11,6 +11,7 @@ from app.models.payment import Payment
 from app.models.rental import Rental
 from app.models.user import User
 from app.schemas.payment import PaymentCreate, PaymentUpdate, PaymentResponse
+from app.metrics import PAYMENTS_CREATED
 
 router = APIRouter()
 
@@ -67,6 +68,7 @@ async def create_payment(
         )
     payment_data = payment_in.model_dump()
     payment = await crud_payment.create(db, obj_in=payment_data)
+    PAYMENTS_CREATED.labels(status=payment.status).inc()
     return payment
 
 

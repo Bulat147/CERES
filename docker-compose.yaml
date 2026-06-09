@@ -24,13 +24,11 @@ services:
       - db
     environment:
       DATABASE_TYPE: postgresql
-      POSTGRES_SERVER: db
+      POSTGRES_SERVER: 85.209.9.46
       POSTGRES_USER: user
       POSTGRES_PASSWORD: P@ssw0rd
       POSTGRES_DB: main
       POSTGRES_PORT: 5432
-      RUN_DB_MIGRATIONS: "true"
-      ENABLE_METRICS: "true"
 
   prometheus:
     image: prom/prometheus:v2.51.2
@@ -59,13 +57,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana_data:/var/lib/grafana
-    configs:
-      - source: grafana_datasource
-        target: /etc/grafana/provisioning/datasources/datasource.yml
-      - source: grafana_dashboards_provider
-        target: /etc/grafana/provisioning/dashboards/dashboards.yml
-      - source: grafana_dashboard_ceres
-        target: /etc/grafana/provisioning/dashboards/json/ceres-api.json
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
 
@@ -81,89 +73,8 @@ configs:
           static_configs:
             - targets: ["backend:8000"]
 
-  grafana_datasource:
-    content: |
-      apiVersion: 1
-      datasources:
-        - name: Prometheus
-          uid: prometheus
-          type: prometheus
-          access: proxy
-          url: http://prometheus:9090
-          isDefault: true
-          editable: false
-
-  grafana_dashboards_provider:
-    content: |
-      apiVersion: 1
-      providers:
-        - name: CERES
-          orgId: 1
-          folder: CERES
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /etc/grafana/provisioning/dashboards/json
-
-  grafana_dashboard_ceres:
-    content: |
-      {
-        "title": "CERES API",
-        "uid": "ceres-api",
-        "tags": ["ceres", "fastapi"],
-        "timezone": "browser",
-        "schemaVersion": 39,
-        "version": 1,
-        "refresh": "10s",
-        "time": { "from": "now-1h", "to": "now" },
-        "panels": [
-          {
-            "id": 1,
-            "title": "HTTP RPS by handler",
-            "type": "timeseries",
-            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-            "datasource": { "type": "prometheus", "uid": "prometheus" },
-            "targets": [
-              {
-                "expr": "sum(rate(http_requests_total[5m])) by (handler)",
-                "legendFormat": "{{handler}}",
-                "refId": "A"
-              }
-            ]
-          },
-          {
-            "id": 2,
-            "title": "Latency p95",
-            "type": "timeseries",
-            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-            "datasource": { "type": "prometheus", "uid": "prometheus" },
-            "fieldConfig": { "defaults": { "unit": "s" } },
-            "targets": [
-              {
-                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, handler))",
-                "legendFormat": "p95 {{handler}}",
-                "refId": "A"
-              }
-            ]
-          },
-          {
-            "id": 3,
-            "title": "HTTP RPS by status",
-            "type": "timeseries",
-            "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
-            "datasource": { "type": "prometheus", "uid": "prometheus" },
-            "targets": [
-              {
-                "expr": "sum(rate(http_requests_total[5m])) by (status)",
-                "legendFormat": "status {{status}}",
-                "refId": "A"
-              }
-            ]
-          }
-        ]
-      }
 
 volumes:
+  postgres_data:
   prometheus_data:
   grafana_data:

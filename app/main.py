@@ -9,6 +9,7 @@ from app.config import settings
 from app.logger import setup_logging
 from app.middlewares import setup_middlewares
 from app.db.database import init_db
+from app.metrics import start_business_metrics_refresh, stop_business_metrics_refresh
 
 
 @asynccontextmanager
@@ -22,11 +23,12 @@ async def lifespan(app: FastAPI):
     # Инициализация базы данных (создание таблиц, если не используются миграции)
     # В продакшене используйте Alembic миграции
     # await init_db()
-    
+
+    metrics_task = start_business_metrics_refresh()
+
     yield
-    
-    # Действия при завершении работы
-    # (закрытие соединений и т.д.)
+
+    await stop_business_metrics_refresh(metrics_task)
 
 
 app: FastAPI = FastAPI(

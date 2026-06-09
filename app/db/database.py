@@ -7,6 +7,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import StaticPool
 
 from app.config import settings
+from app.metrics import instrument_db_engine
 
 
 class GUID(TypeDecorator):
@@ -25,7 +26,6 @@ class GUID(TypeDecorator):
 
 # Определяем движок базы данных в зависимости от типа
 if settings.DATABASE_URL.startswith("sqlite"):
-    # SQLite требует специальной настройки для асинхронной работы
     engine = create_async_engine(
         settings.DATABASE_URL,
         echo=settings.DEBUG,
@@ -34,12 +34,14 @@ if settings.DATABASE_URL.startswith("sqlite"):
         poolclass=StaticPool if ":memory:" in settings.DATABASE_URL else None,
     )
 else:
-    # PostgreSQL или другие базы данных
     engine = create_async_engine(
         settings.DATABASE_URL,
         echo=settings.DEBUG,
         future=True,
+        connect_args={"ssl": False},
     )
+
+instrument_db_engine(engine)
 
 # Фабрика асинхронных сессий
 AsyncSessionLocal = async_sessionmaker(
