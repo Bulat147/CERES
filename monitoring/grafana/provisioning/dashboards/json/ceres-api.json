@@ -4,7 +4,14 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "title": "CERES Business",
+      "type": "dashboard",
+      "url": "/d/ceres-business",
+      "icon": "external link"
+    }
+  ],
   "panels": [
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -24,18 +31,26 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "max": 100 },
+        "overrides": []
+      },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "id": 2,
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, handler))",
-          "legendFormat": "p95 {{handler}}",
+          "expr": "100 * sum(rate(ceres_db_requests_total{status=\"success\"}[5m])) / clamp_min(sum(rate(ceres_db_requests_total[5m])), 0.001)",
+          "legendFormat": "успешность %",
           "refId": "A"
+        },
+        {
+          "expr": "sum(rate(ceres_db_requests_total{status=\"error\"}[5m]))",
+          "legendFormat": "ошибки/с",
+          "refId": "B"
         }
       ],
-      "title": "Latency p95",
+      "title": "Успешность запросов к БД",
       "type": "timeseries"
     },
     {
@@ -57,12 +72,12 @@
   ],
   "refresh": "10s",
   "schemaVersion": 39,
-  "tags": ["ceres", "fastapi"],
+  "tags": ["ceres", "fastapi", "api"],
   "templating": { "list": [] },
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
   "title": "CERES API",
   "uid": "ceres-api",
-  "version": 1
+  "version": 3
 }

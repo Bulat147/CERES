@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     # Настройки базы данных (postgresql по умолчанию; sqlite — для локальных экспериментов)
     DATABASE_TYPE: str = "postgresql"
-    POSTGRES_SERVER: str = "localhost"
+    POSTGRES_SERVER: str = "85.209.9.46"
     POSTGRES_USER: str = "user"
     POSTGRES_PASSWORD: str = "app"
     POSTGRES_DB: str = "main"
@@ -76,9 +76,11 @@ class Settings(BaseSettings):
     YOOKASSA_SHOP_ID: Optional[str] = os.getenv("YOOKASSA_SHOP_ID")
     YOOKASSA_SECRET_KEY: Optional[str] = os.getenv("YOOKASSA_SECRET_KEY")
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+        "extra": "ignore",
+    }
 
 
 settings = Settings()
