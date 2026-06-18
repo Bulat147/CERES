@@ -18,6 +18,7 @@ class Rental(Base):
     price_per_hour = Column(DECIMAL(10, 2), nullable=False)
     final_amount = Column(DECIMAL(10, 2), nullable=True)  # итоговая сумма к оплате
     payment_status = Column(String(20), nullable=False, default="PENDING")  # PENDING, PAID, FAILED, DEBT
+    payment_method_id = Column(GUID, ForeignKey("payment_methods.id"), nullable=True)  # способ оплаты
     opened_at = Column(DateTime, nullable=True)  # когда ячейка была открыта пользователем
     closed_at = Column(DateTime, nullable=True)  # когда пользователь физически закрыл дверь
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
