@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.main import main_router
-from app.api import users, locker_stations, locker_cells, rentals, payment_methods, payments, cell_events, hardware_events
+from app.api import auth, users, locker_stations, locker_cells, rentals, payment_methods, payments, cell_events, hardware_events
 from app.config import settings
 from app.logger import setup_logging
 from app.middlewares import setup_middlewares
@@ -53,6 +53,7 @@ setup_middlewares(app)
 
 # Подключаем роутеры
 app.include_router(main_router)
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(locker_stations.router, prefix="/api/v1/locker-stations", tags=["locker-stations"])
 app.include_router(locker_cells.router, prefix="/api/v1/locker-cells", tags=["locker-cells"])

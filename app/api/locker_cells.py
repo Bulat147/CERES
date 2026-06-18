@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.auth.deps import get_current_user
 from app.db.crud import CRUDBase
 from app.db.database import get_db
 from app.models.locker_cell import LockerCell
@@ -16,7 +17,7 @@ router = APIRouter()
 crud_locker_cell = CRUDBase(LockerCell)
 
 
-@router.get("/", response_model=List[LockerCellResponse])
+@router.get("/", response_model=List[LockerCellResponse], dependencies=[Depends(get_current_user)])
 async def read_locker_cells(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
@@ -36,7 +37,7 @@ async def read_locker_cells(
     return cells
 
 
-@router.post("/", response_model=LockerCellResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=LockerCellResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
 async def create_locker_cell(
     *,
     db: AsyncSession = Depends(get_db),
@@ -57,7 +58,7 @@ async def create_locker_cell(
     return cell
 
 
-@router.get("/{cell_id}", response_model=LockerCellResponse)
+@router.get("/{cell_id}", response_model=LockerCellResponse, dependencies=[Depends(get_current_user)])
 async def read_locker_cell(
     cell_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -74,7 +75,7 @@ async def read_locker_cell(
     return cell
 
 
-@router.put("/{cell_id}", response_model=LockerCellResponse)
+@router.put("/{cell_id}", response_model=LockerCellResponse, dependencies=[Depends(get_current_user)])
 async def update_locker_cell(
     *,
     db: AsyncSession = Depends(get_db),
@@ -103,7 +104,7 @@ async def update_locker_cell(
     return cell
 
 
-@router.delete("/{cell_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{cell_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(get_current_user)])
 async def delete_locker_cell(
     *,
     db: AsyncSession = Depends(get_db),

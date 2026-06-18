@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.auth.deps import get_current_user
 from app.db.crud import CRUDBase
 from app.db.database import get_db
 from app.models.rental import Rental
@@ -19,7 +20,7 @@ router = APIRouter()
 crud_rental = CRUDBase(Rental)
 
 
-@router.get("/", response_model=List[RentalResponse])
+@router.get("/", response_model=List[RentalResponse], dependencies=[Depends(get_current_user)])
 async def read_rentals(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
@@ -45,7 +46,7 @@ async def read_rentals(
     return rentals
 
 
-@router.post("/", response_model=RentalResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=RentalResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
 async def create_rental(
     *,
     db: AsyncSession = Depends(get_db),
@@ -82,7 +83,7 @@ async def create_rental(
     return rental
 
 
-@router.get("/{rental_id}", response_model=RentalResponse)
+@router.get("/{rental_id}", response_model=RentalResponse, dependencies=[Depends(get_current_user)])
 async def read_rental(
     rental_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -99,7 +100,7 @@ async def read_rental(
     return rental
 
 
-@router.put("/{rental_id}", response_model=RentalResponse)
+@router.put("/{rental_id}", response_model=RentalResponse, dependencies=[Depends(get_current_user)])
 async def update_rental(
     *,
     db: AsyncSession = Depends(get_db),
@@ -120,7 +121,7 @@ async def update_rental(
     return rental
 
 
-@router.delete("/{rental_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{rental_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(get_current_user)])
 async def delete_rental(
     *,
     db: AsyncSession = Depends(get_db),
@@ -139,7 +140,7 @@ async def delete_rental(
     return None
 
 
-@router.post("/{rental_id}/start", response_model=RentalResponse)
+@router.post("/{rental_id}/start", response_model=RentalResponse, dependencies=[Depends(get_current_user)])
 async def start_rental(
     *,
     db: AsyncSession = Depends(get_db),
@@ -176,7 +177,7 @@ async def start_rental(
     return rental
 
 
-@router.post("/{rental_id}/close", response_model=RentalResponse)
+@router.post("/{rental_id}/close", response_model=RentalResponse, dependencies=[Depends(get_current_user)])
 async def close_rental(
     *,
     db: AsyncSession = Depends(get_db),
