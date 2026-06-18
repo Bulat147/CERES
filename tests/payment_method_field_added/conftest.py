@@ -4,7 +4,8 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 
-BASE_URL = "http://localhost:8000"
+# BASE_URL = "http://localhost:8000"
+BASE_URL = "http://85.209.9.46:8000"
 
 
 @pytest_asyncio.fixture
@@ -51,6 +52,7 @@ async def user_id(client, unique_phone):
         "phone": unique_phone,
         "full_name": "Тестовый пользователь",
         "email": f"{uuid.uuid4().hex[:8]}@test.com",
+        "password": "testpass123",
     }
     resp = await client.post("/api/v1/users/", json=payload)
     assert resp.status_code == 201
