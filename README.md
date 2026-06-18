@@ -86,6 +86,13 @@ uvicorn app.main:app --reload
 
 Сервер будет доступен по адресу: [http://localhost:8000](http://localhost:8000)
 
+### 8. Запуск тестов при запущенных через docker-compose контейнерах
+
+```bash
+cd tests
+pytest -v --asyncio-mode=auto
+```
+
 ## ⚡ Быстрый старт с SQLite (без Docker)
 
 Для быстрого локального тестирования можно использовать SQLite:

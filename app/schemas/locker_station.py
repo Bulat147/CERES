@@ -29,6 +29,9 @@ class LockerStationUpdate(BaseModel):
 class LockerStationResponse(LockerStationBase):
     id: uuid.UUID
     created_at: datetime
+    total_cells: Optional[int] = None
+    occupied_cells: Optional[int] = None
+    free_cells: Optional[int] = None
 
     class Config:
         from_attributes = True

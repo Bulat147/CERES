@@ -3,15 +3,35 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, case
 
 from app.db.crud import CRUDBase
 from app.db.database import get_db
 from app.models.locker_station import LockerStation
+from app.models.locker_cell import LockerCell
 from app.schemas.locker_station import LockerStationCreate, LockerStationUpdate, LockerStationResponse
 
 router = APIRouter()
 
 crud_locker_station = CRUDBase(LockerStation)
+
+
+async def _apply_cell_counts(stations: List[LockerStation], db: AsyncSession) -> None:
+    if not stations:
+        return
+    station_ids = [s.id for s in stations]
+    stats_query = select(
+        LockerCell.station_id,
+        func.count().label("total"),
+        func.sum(case((LockerCell.status == "AVAILABLE", 1), else_=0)).label("free"),
+    ).where(LockerCell.station_id.in_(station_ids)).group_by(LockerCell.station_id)
+    result = await db.execute(stats_query)
+    stats = {row.station_id: {"total": row.total, "free": row.free} for row in result}
+    for station in stations:
+        s = stats.get(station.id, {"total": 0, "free": 0})
+        station.total_cells = s["total"]
+        station.free_cells = s["free"]
+        station.occupied_cells = s["total"] - s["free"]
 
 
 @router.get("/", response_model=List[LockerStationResponse])
@@ -24,6 +44,7 @@ async def read_locker_stations(
     Получить список постоматов.
     """
     stations = await crud_locker_station.get_multi(db, skip=skip, limit=limit)
+    await _apply_cell_counts(stations, db)
     return stations
 
 
@@ -55,6 +76,7 @@ async def read_locker_station(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Постомат не найден",
         )
+    await _apply_cell_counts([station], db)
     return station
 
 

@@ -12,6 +12,7 @@ class LockerCell(Base):
     id = Column(GUID, primary_key=True, default=uuid.uuid4)
     station_id = Column(GUID, ForeignKey("locker_stations.id"), nullable=False)
     number = Column(Integer, nullable=False)  # номер ячейки в постомате
+    title = Column(String(255), nullable=False, default="")  # название ячейки
     size = Column(String(20), nullable=False)  # SMALL, MEDIUM, LARGE
     hourly_price = Column(DECIMAL(10, 2), nullable=False)
     status = Column(String(50), nullable=False, default="AVAILABLE")  # AVAILABLE, RESERVED, ACTIVE, PAYMENT, BLOCKED, OFFLINE

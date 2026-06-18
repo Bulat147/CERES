@@ -12,6 +12,7 @@ class Payment(Base):
     id = Column(GUID, primary_key=True, default=uuid.uuid4)
     rental_id = Column(GUID, ForeignKey("rentals.id"), nullable=False)
     user_id = Column(GUID, ForeignKey("users.id"), nullable=False)
+    payment_method_id = Column(GUID, ForeignKey("payment_methods.id"), nullable=True)  # способ оплаты
     amount = Column(DECIMAL(10, 2), nullable=False)
     currency = Column(String(3), nullable=False, default="RUB")
     status = Column(String(20), nullable=False, default="PENDING")  # PENDING, PAID, FAILED, DEBT
