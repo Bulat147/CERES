@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "CERES Locker Rental API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    DEBUG: bool = True
+    DEBUG: bool = False
 
     # Настройки базы данных (postgresql по умолчанию; sqlite — для локальных экспериментов)
     DATABASE_TYPE: str = "postgresql"

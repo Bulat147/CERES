@@ -8,6 +8,8 @@ from app.db.crud import CRUDBase
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
+from app.auth.deps import get_current_user
+from app.auth.security import hash_password
 
 router = APIRouter()
 
@@ -17,6 +19,7 @@ crud_user = CRUDBase(User)
 @router.get("/", response_model=List[UserResponse])
 async def read_users(
     db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100,
 ):
@@ -31,6 +34,7 @@ async def read_users(
 async def create_user(
     *,
     db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user),
     user_in: UserCreate,
 ):
     """
@@ -46,6 +50,7 @@ async def create_user(
             detail="Пользователь с таким номером телефона уже существует",
         )
     user_data = user_in.model_dump()
+    user_data["password_hash"] = hash_password(user_data.pop("password"))
     user = await crud_user.create(db, obj_in=user_data)
     return user
 

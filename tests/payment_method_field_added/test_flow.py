@@ -1,4 +1,6 @@
+import json
 import uuid
+import base64
 
 
 class TestFullLifecycle:
@@ -8,6 +10,19 @@ class TestFullLifecycle:
     """
 
     async def test_full_flow(self, client, unique_phone):
+        # 0. Регистрируем пользователя и получаем токен
+        auth_resp = await client.post("/api/v1/auth/register", json={
+            "phone": unique_phone, "full_name": "Flow User",
+            "password": "testpass123",
+        })
+        assert auth_resp.status_code == 200
+        token = auth_resp.json()["access_token"]
+        client.headers.update({"Authorization": f"Bearer {token}"})
+
+        payload_b64 = token.split(".")[1]
+        payload_b64 += "=" * (4 - len(payload_b64) % 4)
+        user_id = json.loads(base64.urlsafe_b64decode(payload_b64))["sub"]
+
         # 1. Создаём станцию
         s = await client.post("/api/v1/locker-stations/", json={
             "title": "Интеграционная станция",
@@ -38,16 +53,7 @@ class TestFullLifecycle:
         assert gs.json()["free_cells"] == 2
         assert gs.json()["occupied_cells"] == 0
 
-        # 4. Создаём пользователя
-        unique_email = f"flow_{uuid.uuid4().hex[:8]}@test.com"
-        u = await client.post("/api/v1/users/", json={
-            "phone": unique_phone, "full_name": "Flow User",
-            "email": unique_email,
-        })
-        assert u.status_code == 201
-        user_id = u.json()["id"]
-
-        # 5. Создаём способ оплаты
+        # 4. Создаём способ оплаты
         pm = await client.post("/api/v1/payment-methods/", json={
             "user_id": user_id, "provider": "YooKassa",
             "masked_pan": "**** **** **** 9999", "is_verified": True,
@@ -55,7 +61,7 @@ class TestFullLifecycle:
         assert pm.status_code == 201
         method_id = pm.json()["id"]
 
-        # 6. Создаём аренду с payment_method_id
+        # 5. Создаём аренду с payment_method_id
         r = await client.post("/api/v1/rentals/", json={
             "user_id": user_id, "cell_id": cell_id,
             "price_per_hour": 60.00, "payment_method_id": method_id,
@@ -66,37 +72,37 @@ class TestFullLifecycle:
         assert r.json()["status"] == "CREATED"
         assert isinstance(r.json()["price_per_hour"], float)
 
-        # 7. Проверяем GET rental
+        # 6. Проверяем GET rental
         gr = await client.get(f"/api/v1/rentals/{rental_id}")
         assert gr.json()["payment_method_id"] == method_id
         assert gr.json()["final_amount"] is None
 
-        # 8. Начинаем аренду
+        # 7. Начинаем аренду
         rs = await client.post(f"/api/v1/rentals/{rental_id}/start")
         assert rs.status_code == 200
         assert rs.json()["status"] == "ACTIVE"
         assert rs.json()["opened_at"] is not None
 
-        # 9. Проверяем что ячейка занята
+        # 8. Проверяем что ячейка занята
         gc = await client.get(f"/api/v1/locker-cells/{cell_id}")
         assert gc.json()["status"] == "ACTIVE"
 
-        # 10. Проверяем что агрегаты изменились
+        # 9. Проверяем что агрегаты изменились
         gs = await client.get(f"/api/v1/locker-stations/{station_id}")
         assert gs.json()["occupied_cells"] == 1
         assert gs.json()["free_cells"] == 1
 
-        # 11. Закрываем аренду
+        # 10. Закрываем аренду
         rc = await client.post(f"/api/v1/rentals/{rental_id}/close")
         assert rc.status_code == 200
         assert rc.json()["status"] == "WAITING_CLOSE"
         assert rc.json()["closed_at"] is not None
 
-        # 12. Проверяем статус ячейки
+        # 11. Проверяем статус ячейки
         gc = await client.get(f"/api/v1/locker-cells/{cell_id}")
         assert gc.json()["status"] == "PAYMENT"
 
-        # 13. Создаём платеж с payment_method_id
+        # 12. Создаём платеж с payment_method_id
         p = await client.post("/api/v1/payments/", json={
             "rental_id": rental_id, "user_id": user_id,
             "amount": 60.00, "payment_method_id": method_id,
@@ -106,7 +112,7 @@ class TestFullLifecycle:
         assert p.json()["payment_method_id"] == method_id
         assert isinstance(p.json()["amount"], float)
 
-        # 14. Проверяем GET payment
+        # 13. Проверяем GET payment
         gp = await client.get(f"/api/v1/payments/{payment_id}")
         assert gp.json()["payment_method_id"] == method_id
         assert gp.json()["status"] == "PENDING"

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.auth.deps import get_current_user
 from app.db.crud import CRUDBase
 from app.db.database import get_db
 from app.models.payment import Payment
@@ -18,7 +19,7 @@ router = APIRouter()
 crud_payment = CRUDBase(Payment)
 
 
-@router.get("/", response_model=List[PaymentResponse])
+@router.get("/", response_model=List[PaymentResponse], dependencies=[Depends(get_current_user)])
 async def read_payments(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
@@ -44,7 +45,7 @@ async def read_payments(
     return payments
 
 
-@router.post("/", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
 async def create_payment(
     *,
     db: AsyncSession = Depends(get_db),
@@ -72,7 +73,7 @@ async def create_payment(
     return payment
 
 
-@router.get("/{payment_id}", response_model=PaymentResponse)
+@router.get("/{payment_id}", response_model=PaymentResponse, dependencies=[Depends(get_current_user)])
 async def read_payment(
     payment_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -89,7 +90,7 @@ async def read_payment(
     return payment
 
 
-@router.put("/{payment_id}", response_model=PaymentResponse)
+@router.put("/{payment_id}", response_model=PaymentResponse, dependencies=[Depends(get_current_user)])
 async def update_payment(
     *,
     db: AsyncSession = Depends(get_db),
@@ -110,7 +111,7 @@ async def update_payment(
     return payment
 
 
-@router.delete("/{payment_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{payment_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(get_current_user)])
 async def delete_payment(
     *,
     db: AsyncSession = Depends(get_db),

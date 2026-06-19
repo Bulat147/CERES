@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, case
 
+from app.auth.deps import get_current_user
 from app.db.crud import CRUDBase
 from app.db.database import get_db
 from app.models.locker_station import LockerStation
@@ -34,7 +35,7 @@ async def _apply_cell_counts(stations: List[LockerStation], db: AsyncSession) ->
         station.occupied_cells = s["total"] - s["free"]
 
 
-@router.get("/", response_model=List[LockerStationResponse])
+@router.get("/", response_model=List[LockerStationResponse], dependencies=[Depends(get_current_user)])
 async def read_locker_stations(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
@@ -48,7 +49,7 @@ async def read_locker_stations(
     return stations
 
 
-@router.post("/", response_model=LockerStationResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=LockerStationResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
 async def create_locker_station(
     *,
     db: AsyncSession = Depends(get_db),
@@ -62,7 +63,7 @@ async def create_locker_station(
     return station
 
 
-@router.get("/{station_id}", response_model=LockerStationResponse)
+@router.get("/{station_id}", response_model=LockerStationResponse, dependencies=[Depends(get_current_user)])
 async def read_locker_station(
     station_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -80,7 +81,7 @@ async def read_locker_station(
     return station
 
 
-@router.put("/{station_id}", response_model=LockerStationResponse)
+@router.put("/{station_id}", response_model=LockerStationResponse, dependencies=[Depends(get_current_user)])
 async def update_locker_station(
     *,
     db: AsyncSession = Depends(get_db),
@@ -101,7 +102,7 @@ async def update_locker_station(
     return station
 
 
-@router.delete("/{station_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{station_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(get_current_user)])
 async def delete_locker_station(
     *,
     db: AsyncSession = Depends(get_db),
