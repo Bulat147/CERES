@@ -106,7 +106,13 @@ SELECT
         WHEN n <= 15 THEN 80
         ELSE 120
     END,
-    'AVAILABLE',
+    CASE
+        WHEN random() < 0.6 THEN 'AVAILABLE'
+        WHEN random() < 0.8 THEN 'ACTIVE'
+        WHEN random() < 0.9 THEN 'RESERVED'
+        WHEN random() < 0.95 THEN 'BLOCKED'
+        ELSE 'OFFLINE'
+    END,
     'HW-' || substring(s.id::text,1,8) || '-' || n,
     NOW()
 FROM locker_stations s
@@ -152,36 +158,47 @@ INSERT INTO rentals (
 )
 SELECT
     gen_random_uuid(),
-    u.id,
-    (SELECT c.id FROM locker_cells c ORDER BY random() LIMIT 1),
-
-    NOW() - (random() * interval '30 days'),
-
-    NOW() - (random() * interval '10 days'),
-
+    rd.user_id,
+    rd.cell_id,
+    rd.started_at,
+    rd.ended_at,
+    rd.status,
+    rd.price_per_hour,
+    rd.final_amount,
+    rd.payment_status,
     CASE
-        WHEN random() < 0.7 THEN 'COMPLETED'
-        WHEN random() < 0.9 THEN 'ACTIVE'
-        ELSE 'CANCELLED'
+        WHEN rd.status IN ('ACTIVE', 'WAITING_CLOSE')
+        THEN (SELECT pm.id FROM payment_methods pm WHERE pm.user_id = rd.user_id ORDER BY random() LIMIT 1)
+        ELSE NULL
     END,
-
-    (ARRAY[50,80,120])[floor(random()*3+1)],
-
-    round((random()*1000 + 100)::numeric, 2),
-
-    CASE
-        WHEN random() < 0.8 THEN 'PAID'
-        WHEN random() < 0.9 THEN 'PENDING'
-        ELSE 'FAILED'
-    END,
-
-    (SELECT pm.id FROM payment_methods pm WHERE pm.user_id = u.id ORDER BY random() LIMIT 1),
-
-    NOW() - (random() * interval '30 days'),
-    NOW() - (random() * interval '5 days'),
-    NOW() - (random() * interval '30 days')
-FROM generate_series(1,100) g
-JOIN LATERAL (SELECT id FROM users ORDER BY random() LIMIT 1) u ON true;
+    rd.opened_at,
+    rd.closed_at,
+    rd.created_at
+FROM (
+    SELECT
+        u.id AS user_id,
+        (SELECT c.id FROM locker_cells c ORDER BY random() LIMIT 1) AS cell_id,
+        NOW() - (random() * interval '30 days') AS started_at,
+        NOW() - (random() * interval '10 days') AS ended_at,
+        CASE
+            WHEN random() < 0.5 THEN 'COMPLETED'
+            WHEN random() < 0.7 THEN 'ACTIVE'
+            WHEN random() < 0.85 THEN 'WAITING_CLOSE'
+            ELSE 'CANCELLED'
+        END AS status,
+        (ARRAY[50,80,120])[floor(random()*3+1)] AS price_per_hour,
+        round((random()*1000 + 100)::numeric, 2) AS final_amount,
+        CASE
+            WHEN random() < 0.8 THEN 'PAID'
+            WHEN random() < 0.9 THEN 'PENDING'
+            ELSE 'FAILED'
+        END AS payment_status,
+        NOW() - (random() * interval '30 days') AS opened_at,
+        NOW() - (random() * interval '5 days') AS closed_at,
+        NOW() - (random() * interval '30 days') AS created_at
+    FROM generate_series(1,100) g
+    JOIN LATERAL (SELECT id FROM users ORDER BY random() LIMIT 1) u ON true
+) rd;
 
 
 INSERT INTO payments (
