@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.auth.deps import get_current_user
 from app.db.crud import CRUDBase
 from app.db.database import get_db
 from app.models.cell_event import CellEvent
@@ -17,7 +16,7 @@ router = APIRouter()
 crud_cell_event = CRUDBase(CellEvent)
 
 
-@router.get("/", response_model=List[CellEventResponse], dependencies=[Depends(get_current_user)])
+@router.get("/", response_model=List[CellEventResponse])
 async def read_cell_events(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
@@ -40,7 +39,7 @@ async def read_cell_events(
     return events
 
 
-@router.post("/", response_model=CellEventResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
+@router.post("/", response_model=CellEventResponse, status_code=status.HTTP_201_CREATED)
 async def create_cell_event(
     *,
     db: AsyncSession = Depends(get_db),
@@ -61,7 +60,7 @@ async def create_cell_event(
     return event
 
 
-@router.get("/{event_id}", response_model=CellEventResponse, dependencies=[Depends(get_current_user)])
+@router.get("/{event_id}", response_model=CellEventResponse)
 async def read_cell_event(
     event_id: UUID,
     db: AsyncSession = Depends(get_db),
