@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.auth.deps import get_current_user
 from app.db.crud import CRUDBase
 from app.db.database import get_db
 from app.models.payment_method import PaymentMethod
@@ -17,7 +16,7 @@ router = APIRouter()
 crud_payment_method = CRUDBase(PaymentMethod)
 
 
-@router.get("/", response_model=List[PaymentMethodResponse], dependencies=[Depends(get_current_user)])
+@router.get("/", response_model=List[PaymentMethodResponse])
 async def read_payment_methods(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
@@ -37,7 +36,7 @@ async def read_payment_methods(
     return methods
 
 
-@router.post("/", response_model=PaymentMethodResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
+@router.post("/", response_model=PaymentMethodResponse, status_code=status.HTTP_201_CREATED)
 async def create_payment_method(
     *,
     db: AsyncSession = Depends(get_db),
@@ -58,7 +57,7 @@ async def create_payment_method(
     return method
 
 
-@router.get("/{method_id}", response_model=PaymentMethodResponse, dependencies=[Depends(get_current_user)])
+@router.get("/{method_id}", response_model=PaymentMethodResponse)
 async def read_payment_method(
     method_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -75,7 +74,7 @@ async def read_payment_method(
     return method
 
 
-@router.put("/{method_id}", response_model=PaymentMethodResponse, dependencies=[Depends(get_current_user)])
+@router.put("/{method_id}", response_model=PaymentMethodResponse)
 async def update_payment_method(
     *,
     db: AsyncSession = Depends(get_db),
@@ -96,7 +95,7 @@ async def update_payment_method(
     return method
 
 
-@router.delete("/{method_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(get_current_user)])
+@router.delete("/{method_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_payment_method(
     *,
     db: AsyncSession = Depends(get_db),

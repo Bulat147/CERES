@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.auth.deps import get_current_user
 from app.db.crud import CRUDBase
 from app.db.database import get_db
 from app.models.hardware_event import HardwareEvent
@@ -17,7 +16,7 @@ router = APIRouter()
 crud_hardware_event = CRUDBase(HardwareEvent)
 
 
-@router.get("/", response_model=List[HardwareEventResponse], dependencies=[Depends(get_current_user)])
+@router.get("/", response_model=List[HardwareEventResponse])
 async def read_hardware_events(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
@@ -40,7 +39,7 @@ async def read_hardware_events(
     return events
 
 
-@router.post("/", response_model=HardwareEventResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
+@router.post("/", response_model=HardwareEventResponse, status_code=status.HTTP_201_CREATED)
 async def create_hardware_event(
     *,
     db: AsyncSession = Depends(get_db),
@@ -61,7 +60,7 @@ async def create_hardware_event(
     return event
 
 
-@router.get("/{event_id}", response_model=HardwareEventResponse, dependencies=[Depends(get_current_user)])
+@router.get("/{event_id}", response_model=HardwareEventResponse)
 async def read_hardware_event(
     event_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -78,7 +77,7 @@ async def read_hardware_event(
     return event
 
 
-@router.put("/{event_id}/mark-processed", response_model=HardwareEventResponse, dependencies=[Depends(get_current_user)])
+@router.put("/{event_id}/mark-processed", response_model=HardwareEventResponse)
 async def mark_hardware_event_processed(
     *,
     db: AsyncSession = Depends(get_db),
