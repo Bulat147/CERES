@@ -45,7 +45,7 @@ def setup_logging(
     from app.config import settings
 
     if level is None:
-        level = settings.LOG_LEVEL
+        level = "DEBUG" if settings.DEBUG else settings.LOG_LEVEL
     if json_logs is None:
         json_logs = settings.JSON_LOGS
     if intercept_handlers is None:
@@ -53,27 +53,37 @@ def setup_logging(
 
     # Удаляем все handlers у loguru и добавляем свой
     logger.remove()
-    logger.add(
-        sys.stdout,
-        format=(
-            "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
-            "<level>{level: <8}</level> | "
-            "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-            "<level>{message}</level>"
-            if not json_logs
-            else None
-        ),
-        level=level,
-        serialize=json_logs,
-        backtrace=True,
-        diagnose=True,
-    )
+    if json_logs:
+        logger.add(
+            sys.stdout,
+            level=level,
+            serialize=True,
+            backtrace=True,
+            diagnose=True,
+        )
+    else:
+        logger.add(
+            sys.stdout,
+            format=(
+                "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
+                "<level>{level: <8}</level> | "
+                "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+                "<level>{message}</level>"
+            ),
+            level=level,
+            backtrace=True,
+            diagnose=True,
+        )
 
     # Перехватываем логи стандартного logging
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 
     for handler in intercept_handlers:
         logging.getLogger(handler).handlers = [InterceptHandler()]
+
+    # При JSON-логах middleware уже пишет http_request — access-лог uvicorn дублирует
+    if json_logs:
+        logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
     # Устанавливаем уровень логирования для SQLAlchemy
     logging.getLogger("sqlalchemy.engine").setLevel(

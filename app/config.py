@@ -10,13 +10,13 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "CERES Locker Rental API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    DEBUG: bool = False
+    DEBUG: bool = True
 
     # Настройки базы данных (postgresql по умолчанию; sqlite — для локальных экспериментов)
     DATABASE_TYPE: str = "postgresql"
     POSTGRES_SERVER: str = "85.209.9.46"
     POSTGRES_USER: str = "user"
-    POSTGRES_PASSWORD: str = "app"
+    POSTGRES_PASSWORD: str = "P@ssw0rd"
     POSTGRES_DB: str = "main"
     POSTGRES_PORT: int = 5432
     SQLITE_DB_PATH: str = "sqlite+aiosqlite:///./ceres.db"
@@ -55,9 +55,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # Настройки логирования
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    JSON_LOGS: bool = os.getenv("JSON_LOGS", "false").lower() == "true"
+    # Настройки логирования (читаются из env / docker-compose)
+    LOG_LEVEL: str = "INFO"
+    JSON_LOGS: bool = False
 
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

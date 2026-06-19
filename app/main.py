@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     Lifespan контекст для управления жизненным циклом приложения.
     """
     # Настройка логирования при запуске
-    setup_logging(level="DEBUG" if settings.DEBUG else "INFO")
+    setup_logging()
 
     # Инициализация базы данных (создание таблиц, если не используются миграции)
     # В продакшене используйте Alembic миграции
