@@ -29,6 +29,31 @@ services:
       POSTGRES_PASSWORD: P@ssw0rd
       POSTGRES_DB: main
       POSTGRES_PORT: 5432
+      LOG_LEVEL: INFO
+      JSON_LOGS: "true"
+
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: ceres-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+    command: -config.file=/etc/loki/loki-config.yml
+
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: ceres-promtail
+    restart: unless-stopped
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./monitoring/promtail/promtail.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
 
   prometheus:
     image: prom/prometheus:v2.51.2
@@ -53,13 +78,14 @@ services:
       - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
+      - loki
 
 configs:
   prometheus_config:
@@ -78,3 +104,4 @@ volumes:
   postgres_data:
   prometheus_data:
   grafana_data:
+  loki_data:

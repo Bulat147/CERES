@@ -231,8 +231,25 @@ docker compose down
 
 ### Просмотр логов
 
+**Grafana + Loki** (рекомендуется):
+
+1. Запустите стек: `docker compose up -d`
+2. Откройте Grafana: [http://localhost:3000](http://localhost:3000) (admin / пароль из `GRAFANA_ADMIN_PASSWORD`)
+3. **Explore** → datasource **Loki** → запрос `{service="backend"}`
+4. Или дашборд **CERES Logs** в папке CERES
+
+Примеры LogQL:
+
+* `{service="backend"} |= "http_request"` — HTTP-запросы API
+* `{service="backend"} |~ "ERROR|WARNING"` — ошибки и предупреждения
+* `{service="db"}` — логи PostgreSQL
+
+Включите `JSON_LOGS=true` в `.env` для структурированных логов (по умолчанию в docker-compose).
+
+**Терминал** (fallback):
+
 ```bash
-docker compose logs -f
+docker compose logs -f backend
 ```
 
 ## 📊 Миграции базы данных

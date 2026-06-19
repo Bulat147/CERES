@@ -14,15 +14,19 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()
-        response = await call_next(request)
-        process_time = time.time() - start_time
-
-        log.info(
-            f"{request.method} {request.url.path} - "
-            f"Status: {response.status_code} - "
-            f"Duration: {process_time:.3f}s"
-        )
-        return response
+        status_code = 500
+        try:
+            response = await call_next(request)
+            status_code = response.status_code
+            return response
+        finally:
+            duration_ms = round((time.time() - start_time) * 1000, 2)
+            log.bind(
+                method=request.method,
+                path=request.url.path,
+                status_code=status_code,
+                duration_ms=duration_ms,
+            ).info("http_request")
 
 
 def setup_middlewares(app: FastAPI) -> None:
